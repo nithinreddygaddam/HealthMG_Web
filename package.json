@@ -1,0 +1,27 @@
+{
+  "name": "HealthMG",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www"
+  },
+  "dependencies": {
+    "async": "^1.5.2",
+    "body-parser": "~1.0.0",
+    "cookie-parser": "~1.0.1",
+    "debug": "~0.7.4",
+    "ejs": "~0.8.5",
+    "express": "~4.2.0",
+    "express-jwt": "^1.0.0",
+    "jsonwebtoken": "^3.2.2",
+    "mongoose": "4.3.4",
+    "morgan": "~1.0.0",
+    "nodemon": "^1.2.1",
+    "passport": "^0.2.1",
+    "passport-local": "^1.0.0",
+    "socket.io": "^1.4.4",
+    "static-favicon": "~1.0.0",
+    "synchronize": "^0.9.15",
+    "forever":  "*" 
+  }
+}
