@@ -10,11 +10,11 @@ var UserSchema = new mongoose.Schema({
     username:       {type: String, lowercase: true, unique: true},
     hash:           String,
     salt:           String,
-    firstName:      {type: String},
-    lastName:       {type: String},
-    dateOfBirth:    {type: String},
-    gender:         {type: String},
-    email:          {type: String},
+    firstName:      {type: String, default: 'N/A'},
+    lastName:       {type: String, default: 'N/A'},
+    dateOfBirth:    {type: String, default: "03-23-1990"},
+    gender:         {type: String, default:'Male'},
+    email:          {type: String, default: 'N/A'},
     created_at: {type: Date, default_date: Date.now}
 });
 
@@ -37,7 +37,8 @@ UserSchema.methods.generateJWT = function() {
     var exp = new Date(today);
     exp.setDate(today.getDate() + 365);
 
-    //use an environment variable for referencing the secret.. don't hardcode it
+
+    //use an environment variable for referencing the secret.. don't hard
     return jwt.sign({
         _id: this._id,
         username: this.username,

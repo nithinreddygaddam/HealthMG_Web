@@ -9,7 +9,7 @@ var passport = require('passport');
 var synchronize = require('synchronize');
 
 // mongoose.connect('mongodb://localhost/HealthMG2');
-mongoose.connect('mongodb://nithin:nithin@ds043082.mlab.com:43082/health_mg');
+mongoose.connect('mongodb://nithin:nithin@ds031618.mlab.com:31618/health_mg');
 // username: nithinreddy
 // password: HealthMG7!
 
@@ -19,6 +19,8 @@ require('./models/StepCounts');
 require('./models/HeartRates');
 require('./models/Users');
 require('./models/Subscriptions');
+require('./models/ChatMessages');
+require('./models/Conversations');
 
 require('./config/passport');
 
