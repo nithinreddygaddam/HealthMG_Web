@@ -15,6 +15,7 @@ router.get('/', function(req, res) {
     res.render('index', { title: 'Express' });
 });
 
+
 var mongoose = require('mongoose');
 var User = mongoose.model('User');
 var HeartRate = mongoose.model('HeartRate');
@@ -27,8 +28,10 @@ var ChatMessage = mongoose.model('ChatMessage');
 
 var auth = jwt({secret: 'SECRET', userProperty: 'payload'});
 
-http.listen(3007, function(){
-    console.log('Listening on *:3007');
+http.listen(8000, function(){
+    console.log('Listening on *:3000');
+    console.log( http.address().address );
+
 });
 
 // Socket code for interacting with the mobile app
