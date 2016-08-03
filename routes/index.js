@@ -55,6 +55,9 @@ io.on('connection', function(clientSocket){
         delete users[clientSocket.username];
     });
 
+    clientSocket.on('ping', function(){
+        clientSocket.emit("pong");
+    });
 
     clientSocket.on('requestSubscription', function(_id, username){
 
