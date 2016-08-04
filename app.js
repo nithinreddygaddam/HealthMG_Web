@@ -6,7 +6,7 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var passport = require('passport');
-var synchronize = require('synchronize');
+var async = require('async');
 
 // mongoose.connect('mongodb://localhost/HealthMG2');
 mongoose.connect('mongodb://nithin:nithin@ds031618.mlab.com:31618/health_mg');

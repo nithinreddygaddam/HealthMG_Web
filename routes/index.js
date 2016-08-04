@@ -2,8 +2,7 @@ var express = require('express');
 var router = express.Router();
 var jwt = require('express-jwt');
 var passport = require('passport');
-var synchronize = require('synchronize');
-
+var async = require('async');
 var http = require('http').Server(express);
 var io = require('socket.io')(http);
 var socketioJwt   = require("socketio-jwt");
@@ -28,10 +27,9 @@ var ChatMessage = mongoose.model('ChatMessage');
 
 var auth = jwt({secret: 'SECRET', userProperty: 'payload'});
 
-http.listen(8000, function(){
-    console.log('Listening on *:3000');
-    console.log( http.address().address );
 
+http.listen(8100, function(){
+    console.log('Listening on *:8100');
 });
 
 // Socket code for interacting with the mobile app
@@ -304,7 +302,8 @@ io.on('connection', function(clientSocket){
                 }
             });
         }
-  });
+    });
+
 
 
     clientSocket.on('getConversationsList', function(userID){
@@ -313,99 +312,99 @@ io.on('connection', function(clientSocket){
             if (err) { 
                 console.log(err);
             }
-                console.log(conversations);
+            console.log(conversations);
             var itemsProcessed = 0;
             var arrConvo = [];
             var userProf = [];
             var name = "";
 
             conversations.forEach( function(convo) {
-                    if(convo.users[0] != userID){
-                        var query = User.findById(convo.users[0]);
-                        query.exec(function (err, user) {
-                            if (err) {
+
+                if(convo.users[0] != userID){
+                    var query = User.findById(convo.users[0]);
+                    query.exec(function (err, user) {
+                        if (err) {
+                            console.log(err);
+                        }
+                        if (!user) {
+                            console.log("can't find user");
+                        }
+                        name = user.firstName + " " + user.lastName;
+
+                        var q = ChatMessage.findOne({'conversation': convo}).sort({created_at: -1});
+                        q.exec(function (err, message){
+                            
+                            if (err){
                                 console.log(err);
                             }
-                            if (!user) {
-                                console.log("can't find user");
-                            }
-                            name = user.firstName + " " + user.lastName;
 
-                            var q = ChatMessage.findOne({'conversation': convo}).sort({created_at: -1});
-                            q.exec(function (err, message){
-                    if (err){
-                        console.log(err);
-                    }
-                    var conv = {
-                        id: convo._id.toString(),
-                        name: name,
-                        user: user,
-                        text: message.text,
-                        created_at: message.created_at,
-                    };
-                    console.log("123");
-                    console.log(conv);
-                    arrConvo.push(conv);
-
-                    itemsProcessed++;
-                    console.log(itemsProcessed);
-                    console.log(conversations.length);
-                    if( itemsProcessed == conversations.length){
-                        console.log("popping array");
-                        console.log(arrConvo);
-                        clientSocket.emit("successConversationsList", JSON.parse(JSON.stringify(arrConvo)));
-                    }
-                });
-                        });
-                    }
-                    else{
-                        var query = User.findById(convo.users[1]);
-                        query.exec(function (err, user) {
-                            if (err) {
-                                console.log(err);
-                            }
-                            if (!user) {
-                                console.log("can't find user");
-                            }
-                            name = user.firstName + " " + user.lastName;
-                            // userProf = user;
-
-                            var q = ChatMessage.findOne({'conversation': convo}).sort({created_at: -1});
-                q.exec(function (err, message){
-                    if (err){
-                        console.log(err);
-                    }
-                    var conv = {
-                        id: convo._id.toString(),
-                        name: name,
-                        user: user,
-                        text: message.text,
-                        created_at: message.created_at
-                    };
-                    console.log("123");
-                    console.log(conv);
-                    arrConvo.push(conv);
-
-                    itemsProcessed++;
-                    console.log(itemsProcessed);
-                    console.log(conversations.length);
-                    if( itemsProcessed == conversations.length){
-                        console.log("popping array");
-                        console.log(arrConvo);
-                        clientSocket.emit("successConversationsList", arrConvo);
-                    }
-                });
-                        });
-                    }
+                            var conv = {
+                                id: convo._id.toString(),
+                                name: name,
+                                user: user,
+                                text: message.text,
+                                created_at: message.created_at,
+                            };
                 
+                            console.log("123");
+                            console.log(conv);
+                            arrConvo.push(conv);
+                            itemsProcessed++;
+                            console.log(itemsProcessed);
+                            console.log(conversations.length);
+                            if( itemsProcessed == conversations.length){
+                                console.log("popping array");
+                                console.log(arrConvo);
+                                clientSocket.emit("successConversationsList", JSON.parse(JSON.stringify(arrConvo)));
+                            }
+                        });
+                    });
+                }
+                else{
+                    var query = User.findById(convo.users[1]);
+                    query.exec(function (err, user) {
+                        if (err) {
+                            console.log(err);
+                        }
+                        if (!user) {
+                            console.log("can't find user");
+                        }
+                        name = user.firstName + " " + user.lastName;
+                        // userProf = user;
 
+                        var q = ChatMessage.findOne({'conversation': convo}).sort({created_at: -1});
+                        q.exec(function (err, message){
+                            if (err){
+                                console.log(err);
+                            }
+                            var conv = {
+                                id: convo._id.toString(),
+                                name: name,
+                                user: user,
+                                text: message.text,
+                                created_at: message.created_at
+                            };
+                    
+                            console.log("123");
+                            console.log(conv);
+                            arrConvo.push(conv);
+
+                            itemsProcessed++;
+                            console.log(itemsProcessed);
+                            console.log(conversations.length);
+                            if( itemsProcessed == conversations.length){
+                                console.log("popping array");
+                                console.log(arrConvo);
+                                clientSocket.emit("successConversationsList", arrConvo);
+                            }
+                        });
+                    });
+                }
             });
-                
         });
-
     });
 
-    //delete chat by conversation ID
+        //delete chat by conversation ID
     clientSocket.on('deleteChat', function(conversationID){
 
         Conversation.remove({"_id": mongoose.Types.ObjectId(conversationID)});
@@ -562,7 +561,8 @@ router.post('/login', function(req, res, next){
 
 
 router.post('/register', function(req, res, next){
-    if(!req.body.username || !req.body.password || req.body.firstName || req.body.lastName ){
+    console.log("registering");
+    if(!req.body.username || !req.body.password || !req.body.firstName || !req.body.lastName ){
         return res.status(400).json({message :'Please fill out all fields'});
     }
         var user = new User();
