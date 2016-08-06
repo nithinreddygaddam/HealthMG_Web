@@ -316,7 +316,6 @@ io.on('connection', function(clientSocket){
             var itemsProcessed = 0;
             var arrConvo = [];
             var userProf = [];
-            var name = "";
 
             conversations.forEach( function(convo) {
 
@@ -329,21 +328,22 @@ io.on('connection', function(clientSocket){
                         if (!user) {
                             console.log("can't find user");
                         }
-                        name = user.firstName + " " + user.lastName;
 
-                        var q = ChatMessage.findOne({'conversation': convo}).sort({created_at: -1});
-                        q.exec(function (err, message){
+                        // var q = ChatMessage.findOne({'conversation': convo}).sort({created_at: -1});
+                        // q.exec(function (err, message){
                             
-                            if (err){
-                                console.log(err);
-                            }
+                        //     if (err){
+                        //         console.log(err);
+                        //     }
 
                             var conv = {
                                 id: convo._id.toString(),
-                                name: name,
+                                name: user.firstName + " " + user.lastName,
                                 user: user,
-                                text: message.text,
-                                created_at: message.created_at,
+                                // text: message.text,
+                                text: " ",
+                                // created_at: message.created_at
+                                created_at: " "
                             };
                 
                             console.log("123");
@@ -357,32 +357,33 @@ io.on('connection', function(clientSocket){
                                 console.log(arrConvo);
                                 clientSocket.emit("successConversationsList", JSON.parse(JSON.stringify(arrConvo)));
                             }
-                        });
+                        // });
                     });
                 }
                 else{
                     var query = User.findById(convo.users[1]);
-                    query.exec(function (err, user) {
+                    query.exec(function (err, user2) {
                         if (err) {
                             console.log(err);
                         }
-                        if (!user) {
+                        if (!user2) {
                             console.log("can't find user");
                         }
-                        name = user.firstName + " " + user.lastName;
                         // userProf = user;
 
-                        var q = ChatMessage.findOne({'conversation': convo}).sort({created_at: -1});
-                        q.exec(function (err, message){
-                            if (err){
-                                console.log(err);
-                            }
+                        // var q = ChatMessage.findOne({'conversation': convo}).sort({created_at: -1});
+                        // q.exec(function (err, message){
+                        //     if (err){
+                        //         console.log(err);
+                        //     }
                             var conv = {
                                 id: convo._id.toString(),
-                                name: name,
-                                user: user,
-                                text: message.text,
-                                created_at: message.created_at
+                                name: user2.firstName + " " + user2.lastName,
+                                user: user2,
+                                // text: message.text,
+                                text: " ",
+                                // created_at: message.created_at
+                                created_at: " "
                             };
                     
                             console.log("123");
@@ -397,7 +398,7 @@ io.on('connection', function(clientSocket){
                                 console.log(arrConvo);
                                 clientSocket.emit("successConversationsList", arrConvo);
                             }
-                        });
+                        // });
                     });
                 }
             });
@@ -406,31 +407,35 @@ io.on('connection', function(clientSocket){
 
         //delete chat by conversation ID
     clientSocket.on('deleteChat', function(conversationID){
-
-        Conversation.remove({"_id": mongoose.Types.ObjectId(conversationID)});
-        ChatMessage.remove({"conversation": conversationID});
+        console.log("deleting")
+        console.log(conversationID)
+        console.log(mongoose.Types.ObjectId(conversationID))
+        Conversation.remove({"_id": mongoose.Types.ObjectId(conversationID)}, function (err) {
+        if (err) return handleError(err);
+            console.log("deleted conversation")
+        });
+        ChatMessage.remove({"conversation": conversationID}, function (err) {
+        if (err) return handleError(err);
+            console.log("deleted chat messages")
+        });
     });
 
 
     clientSocket.on('deleteSubscibtion', function(userID, user2ID){
 
-        Subscription.findOne({publisher: userID, subscriber: user2ID}, function (err, subscribtion) {
-            if (err) { 
-                console.log(err);
-            }
-                Subscription.remove(subscribtion);
+        Subscription.remove({"publisher": userID, "subscriber": user2ID}, function (err) {
+        if (err) return handleError(err); 
+            console.log("deleted subscription");
 
-                Conversation.find({ 'users' : { $all : [ userID, user2ID ]}}, function (err, conversation) {
-                if (err) { 
-                    console.log(err);
-                }
-                    Conversation.remove(conversation);
-                    ChatMessage.remove({"conversation": conversation._id.toString()});
-
-                });
-
+            Conversation.remove({ 'users' : { $all : [ userID, user2ID ]}}, function (err) {
+            if (err) return handleError(err);
+                console.log("deleted conversation")
+            });
+            ChatMessage.remove({"conversation": conversationID}, function (err) {
+            if (err) return handleError(err);
+                console.log("deleted chat messages")
+            });
         });
-        
     });
 
 
