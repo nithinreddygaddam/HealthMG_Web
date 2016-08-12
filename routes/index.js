@@ -24,6 +24,11 @@ var Calories = mongoose.model('Calories');
 var Distance = mongoose.model('Distance');
 var Conversation = mongoose.model('Conversation');
 var ChatMessage = mongoose.model('ChatMessage');
+var HeartRateMinStats = mongoose.model('HeartRateMinStats');
+var HeartRateMaxStats = mongoose.model('HeartRateMaxStats');
+var StepCountStats = mongoose.model('StepCountStats');
+var CaloriesStats = mongoose.model('CaloriesStats');
+var DistanceStats = mongoose.model('DistanceStats');
 
 var auth = jwt({secret: 'SECRET', userProperty: 'payload'});
 
@@ -42,13 +47,15 @@ io.on('connection', function(clientSocket){
 
     clientSocket.emit("connected");
 
-//ID instead of username
+// username is ID here
     clientSocket.on('newUser', function (username) {
         if (!(username in users)) {
             console.log('a user connected: ' + username);
             clientSocket.username = username;
             users[clientSocket.username] = clientSocket;
         }
+
+        
     });
 
     clientSocket.on('disconnect', function(){
@@ -56,9 +63,174 @@ io.on('connection', function(clientSocket){
         delete users[clientSocket.username];
     });
 
-    clientSocket.on('ping', function(){
-        clientSocket.emit("pong");
+
+    clientSocket.on("getLatestRecords", function (username) {
+        var timeStamp0 = " "
+        var timeStamp1 = " "
+        var timeStamp2 = " "
+        var timeStamp3 = " "
+        console.log("Getting latest records");
+        var q = StepCountStats.find({user: username}).limit(1).sort({timeStamp: -1});
+        q.exec(function(err, latestRecord) {
+            if (err) {
+                console.log(err);
+            }
+            console.log(latestRecord)
+
+            if(latestRecord.length > 0){
+                timeStamp0 = latestRecord.timeStamp
+            }   
+
+            var q2 = DistanceStats.find({user: username}).limit(1).sort({timeStamp: -1});
+            q2.exec(function(err, latestRecord2) {
+                if (err) {
+                    console.log(err);
+                }
+            
+                console.log(latestRecord2.timeStamp)
+
+                if(latestRecord.length > 0){
+                    timeStamp1 = latestRecord2.timeStamp
+                }
+                
+                console.log(timeStamp1)
+
+                var q3 = CaloriesStats.find({user: username}).limit(1).sort({timeStamp: -1});
+                q3.exec(function(err, latestRecord3) {
+                    if (err) {
+                        console.log(err);
+                    }
+                   
+
+                    if(latestRecord.length > 0){
+                        timeStamp2 = latestRecord3.timeStamp
+                    }
+
+                    var q4 = HeartRateMinStats.find({user: username}).limit(1).sort({timeStamp: -1});
+                    q4.exec(function(err, latestRecord4) {
+                        if (err) {
+                            console.log(err);
+                        }
+
+                        if(latestRecord.length > 0){
+                            timeStamp3 = latestRecord4.timeStamp 
+                        }
+                        
+
+                        console.log("<<<<<<<<<<<<<<<<<<<<<<<<<latest records----------------------------------");
+                        console.log(timeStamp1)
+
+                        clientSocket.emit("successLatestRecords", timeStamp0, timeStamp1, timeStamp2, timeStamp3 );    
+
+                    });
+                });
+            });    
+        });
     });
+
+
+clientSocket.on('sendUpdates', function(steps, distances, calories, hrMins, hrMaxs){
+
+    console.log(steps)
+    console.log(distances)
+    console.log(calories)
+
+
+    
+
+    steps.forEach( function(step) {
+
+        var stepC = new StepCountStats();
+        stepC.timeStamp = step["timeStamp"];
+        stepC.weekDay = step.weekDay;
+        stepC.day = step.day;
+        stepC.month = step.month;
+        stepC.year = step.year;
+        stepC.value = step.value;
+        stepC.user = step.user;
+        stepC.save(function (err){
+            if(err){ console.log(err);}
+
+        });
+
+    });
+
+    
+    distances.forEach( function(dist) {
+
+        var distance = new DistanceStats();
+
+        distance.timeStamp = dist.timeStamp;
+        distance.weekDay = dist.weekDay;
+        distance.day = dist.day;
+        distance.month = dist.month;
+        distance.year = dist.year;
+        distance.value = dist.value;
+        distance.user = dist.user;
+        distance.save(function (err){
+            if(err){ console.log(err);}
+
+        });
+    });
+
+
+    
+    calories.forEach( function(calorie) {
+
+        var cal = new CaloriesStats();
+
+        cal.timeStamp = calorie.timeStamp;
+        cal.weekDay = calorie.weekDay;
+        cal.day = calorie.day;
+        cal.month = calorie.month;
+        cal.year = calorie.year;
+        cal.value = calorie.value;
+        cal.user = calorie.user;
+        cal.save(function (err){
+            if(err){ console.log(err);}
+
+        });
+    });
+
+
+    
+    hrMaxs.forEach( function(hr) {
+
+        var hrsMax = new HeartRateMaxStats();
+
+        hrsMax.timeStamp = hr.timeStamp;
+        hrsMax.weekDay = hr.weekDay;
+        hrsMax.day = hr.day;
+        hrsMax.month = hr.month;
+        hrsMax.year = hr.year;
+        hrsMax.value = hr.value;
+        hrsMax.user = hr.user;
+        hrsMax.save(function (err){
+            if(err){ console.log(err);}
+
+        });
+    });
+
+
+    
+    hrMins.forEach( function(hr) {
+
+        var hrsMin = new HeartRateMinStats();
+
+        hrsMin.timeStamp = hr.timeStamp;
+        hrsMin.weekDay = hr.weekDay;
+        hrsMin.day = hr.day;
+        hrsMin.month = hr.month;
+        hrsMin.year = hr.year;
+        hrsMin.value = hr.value;
+        hrsMin.user = hr.user;
+        hrsMin.save(function (err){
+            if(err){ console.log(err);}
+
+        });
+    });
+});
+
 
     clientSocket.on('requestSubscription', function(_id, username){
 
@@ -442,6 +614,7 @@ io.on('connection', function(clientSocket){
     //save heart rate to database
     clientSocket.on('heartRate', function(timeStamp, date, time, hr, uuid, user){
         var heartR = new HeartRate();
+        console.log("Got heart Rate");
 
         heartR.timeStamp = timeStamp;
         heartR.time = time;
@@ -459,6 +632,8 @@ io.on('connection', function(clientSocket){
     clientSocket.on('stepCount', function(timeStamp, date, time, count, uuid, user){
         var stepC = new StepCount();
 
+        console.log("Got steps");
+
         stepC.timeStamp = timeStamp;
         stepC.time = time;
         stepC.date = date;
@@ -475,6 +650,8 @@ io.on('connection', function(clientSocket){
     clientSocket.on('distance', function(timeStamp, date, time, val, uuid, user){
         var distance = new Distance();
 
+        console.log("Got Distance");
+
         distance.timeStamp = timeStamp;
         distance.time = time;
         distance.date = date;
@@ -490,6 +667,8 @@ io.on('connection', function(clientSocket){
     //save calories to database
     clientSocket.on('calories', function(timeStamp, date, time, val, uuid, user){
         var calories = new Calories();
+
+        console.log("Got calories");
 
         calories.timeStamp = timeStamp;
         calories.time = time;
@@ -520,24 +699,6 @@ io.on('connection', function(clientSocket){
         }
         // console.log(latestRecords);
         clientSocket.emit("successHeartRates", latestRecords, emptyFlag);        
-        });
-    });
-
-    clientSocket.on('getLatestRecords', function(user){
-
-        console.log("Getting latest records");
-        var emptyFlag = 0;
-        var q = HeartRate.find({user: user._id}).limit(1).sort({timeStamp: -1});
-        q.exec(function(err, latestRecords) {
-        if (err) {
-            console.log(err);
-        }
-        if (latestRecords.length === 0){
-            emptyFlag = 1;
-            console.log("Heart rate data empty for user")
-        }
-        console.log(latestRecords);
-        clientSocket.emit("successLatestRecords", latestRecords, emptyFlag);        
         });
     });
 

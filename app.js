@@ -13,6 +13,11 @@ mongoose.connect('mongodb://nithin:nithin@ds031618.mlab.com:31618/health_mg');
 // username: nithinreddy
 // password: HealthMG7!
 
+require('./models/DistancesStats');
+require('./models/CaloriesStats');
+require('./models/StepCountsStats');
+require('./models/HeartRatesMinStats');
+require('./models/HeartRatesMaxStats');
 require('./models/Distances');
 require('./models/Calories');
 require('./models/StepCounts');
